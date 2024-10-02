@@ -1,0 +1,3 @@
+aiohttp
+psycopg
+aioboto3
