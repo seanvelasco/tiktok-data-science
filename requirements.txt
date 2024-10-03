@@ -1,3 +1,4 @@
 aiohttp
 psycopg
 aioboto3
+dotenv

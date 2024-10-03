@@ -16,8 +16,8 @@ def format_post(post):
         "title": post["title"],
         "username": post["author_unique_id"],
         "nickname": post["author_name"],
-        "thumbnail_width": post["thumbnail_width"],
-        "thumbnail_height": post["thumbnail_height"],
+        "width": post["thumbnail_width"],
+        "height": post["thumbnail_height"],
         "thumbnail": post["thumbnail_url"]
     }
         
