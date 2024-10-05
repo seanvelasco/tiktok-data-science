@@ -1,4 +1,37 @@
 import re
+import mimetypes
+import urllib.parse
+from collections import defaultdict, deque
+
+def topological_sort(items):
+    graph = defaultdict(list)
+    in_degree = defaultdict(int)
+    for item in items:
+        id_ = item['id']
+        parent = item.get('parent', None)
+        if parent is not None:
+            graph[parent].append(id_)
+            in_degree[id_] += 1
+        if id_ not in in_degree:
+            in_degree[id_] = 0
+    queue = deque([item['id'] for item in items if in_degree[item['id']] == 0])
+    sorted_items = []
+    while queue:
+        current_id = queue.popleft()
+        sorted_items.append(current_id)
+        for child in graph[current_id]:
+            in_degree[child] -= 1
+            if in_degree[child] == 0:
+                queue.append(child)
+    id_to_item = {item['id']: item for item in items}
+    sorted_list = [id_to_item[id_] for id_ in sorted_items if id_ in id_to_item]
+    return sorted_list
+
+def extract_mime_type(url):
+    parsed_url = urllib.parse.urlparse(url)
+    file_extension = parsed_url.path.split('.')[-1] if '.' in parsed_url.path else ''
+    mime_type, _ = mimetypes.guess_type(f"file.{file_extension}")
+    return mime_type if mime_type else 'application/octet-stream'
 
 def get_list(filename):
     with open(filename, "r") as file:
@@ -9,7 +42,7 @@ async def fetch_resource(session, url):
     async with session.get(url) as response:
         response.raise_for_status()
         return await response.read()
-    
+
 def format_post(post):
     return {
         "id": post["embed_product_id"],
@@ -20,7 +53,18 @@ def format_post(post):
         "height": post["thumbnail_height"],
         "thumbnail": post["thumbnail_url"]
     }
-        
+
+def format_video_item_to_post(post):
+    return {
+        "id": post["embed_product_id"],
+        "title": post["title"],
+        "username": post["author_unique_id"],
+        "nickname": post["author_name"],
+        "width": post["thumbnail_width"],
+        "height": post["thumbnail_height"],
+        "thumbnail": post["thumbnail_url"]
+    }
+
 def format_user(user):
     return {
         "id": user["uid"],
@@ -28,7 +72,6 @@ def format_user(user):
         "nickname": user["nickname"],
         "bio": user["signature"],
         "region": user["region"],
-        "avatar_uri": user["avatar_uri"],
         "avatar": user["avatar_thumb"]["url_list"][0]
     }
 
@@ -66,9 +109,9 @@ def threaded_comments_and_replies(comments):
     #   reply B to A
     #   reply C to B
     #   reply D to A
-    #   reply E to B 
+    #   reply E to B
     #   reply F to C
-    
+
     # comment
     #   reply A
     #       reply B to A

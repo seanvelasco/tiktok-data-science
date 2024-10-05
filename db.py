@@ -4,7 +4,7 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-DB_CONN = os.environ.get("PG_CONN_STR")
+DB_CONN = str(os.environ.get("PG_CONN_STR"))
 
 def get_or_create_db():
     conn = psycopg.connect(DB_CONN)
@@ -25,8 +25,15 @@ def get_or_create_db():
                     id TEXT NOT NULL PRIMARY KEY,
                     title TEXT,
                     author TEXT NOT NULL,
+                    format TEXT,
                     width INT,
                     height INT,
+                    duration INT,
+                    likes_count INT,
+                    plays_count INT,
+                    reposts_count INT,
+                    shares_count INT,
+                    created TIMESTAMP,
                     scraped TIMESTAMP,
                     deleted BOOL
                 )
@@ -48,8 +55,7 @@ def get_or_create_db():
                     FOREIGN KEY (post) REFERENCES posts(id)
                 )
             """)
-            
-            # Create indices
+
             cur.execute("CREATE INDEX IF NOT EXISTS idx_comments_id ON comments (id)")
             cur.execute("CREATE INDEX IF NOT EXISTS idx_posts_id ON posts (id)")
             cur.execute("CREATE INDEX IF NOT EXISTS idx_users_id ON users (id)")
@@ -58,3 +64,4 @@ def get_or_create_db():
     except Exception as e:
         conn.rollback()
         raise e
+    return conn
